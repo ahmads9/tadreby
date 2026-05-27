@@ -539,26 +539,37 @@ auth.getRedirectResult().then(result=>{
 });
 
 let fsUnsub=null;
+let fsUnsub=null;
 function startRealtimeSync(){
   if(!currentUser)return;
   if(fsUnsub)fsUnsub();
+  let firstSnap=true;
   fsUnsub=db.collection('users').doc(currentUser.uid)
     .collection('workouts')
     .onSnapshot(snap=>{
-      snap.docChanges().forEach(change=>{
-        const k=fsKey(change.doc.id);
-        if(change.type==='removed'){
-          lsDel(k);
-        } else {
-          const d=change.doc.data().log;
-          if(d)lsSet(k,d);
+      if(firstSnap){
+        firstSnap=false;
+        // Firestore هو المصدر الوحيد — امسح القديم واستبدل
+        const old=[];
+        for(let i=0;i<localStorage.length;i++){
+          const k=localStorage.key(i);
+          if(k&&k.startsWith('wk_'))old.push(k);
         }
-      });
+        old.forEach(k=>lsDel(k));
+        snap.forEach(doc=>{
+          const d=doc.data().log;
+          if(d)lsSet(fsKey(doc.id),d);
+        });
+      } else {
+        snap.docChanges().forEach(change=>{
+          const k=fsKey(change.doc.id);
+          if(change.type==='removed') lsDel(k);
+          else{const d=change.doc.data().log;if(d)lsSet(k,d);}
+        });
+      }
       renderHome();
-      const cur=document.getElementById('screen-history');
-      if(cur&&!cur.classList.contains('hidden'))renderHistory();
-      const prg=document.getElementById('screen-progress');
-      if(prg&&!prg.classList.contains('hidden'))renderProgress();
+      if(!document.getElementById('screen-history').classList.contains('hidden'))renderHistory();
+      if(!document.getElementById('screen-progress').classList.contains('hidden'))renderProgress();
     },e=>console.log('snapshot:',e));
 }
 // ── Render home ──
