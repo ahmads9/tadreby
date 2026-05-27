@@ -310,6 +310,12 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+  setTimeout(()=>{
+  if(!document.getElementById('loading').classList.contains('hidden')){
+    document.getElementById('loading').classList.add('hidden');
+    showScreen('signin');
+  }
+},6000);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
