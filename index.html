@@ -549,7 +549,6 @@ function startRealtimeSync(){
     .onSnapshot(snap=>{
       if(firstSnap){
         firstSnap=false;
-        // Firestore هو المصدر الوحيد — امسح القديم واستبدل
         const old=[];
         for(let i=0;i<localStorage.length;i++){
           const k=localStorage.key(i);
