@@ -472,7 +472,14 @@ function fmtDate(ds){
 // ── Auth ──
 function signIn(){
   const provider=new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider).catch(e=>showToast('خطأ: '+e.message));
+  const isMobile=/iphone|ipad|ipod|android/i.test(navigator.userAgent);
+  if(isMobile){
+    auth.signInWithRedirect(provider).catch(e=>showToast('خطأ: '+e.message));
+  } else {
+    auth.signInWithPopup(provider)
+      .then(()=>showToast('✅ تم تسجيل الدخول'))
+      .catch(e=>showToast('خطأ: '+e.code));
+  }
 }
 
 function signOut(){
