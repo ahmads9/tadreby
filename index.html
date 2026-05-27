@@ -472,14 +472,15 @@ function fmtDate(ds){
 // ── Auth ──
 function signIn(){
   const provider=new firebase.auth.GoogleAuthProvider();
-  const isMobile=/iphone|ipad|ipod|android/i.test(navigator.userAgent);
-  if(isMobile){
-    auth.signInWithRedirect(provider).catch(e=>showToast('خطأ: '+e.message));
-  } else {
-    auth.signInWithPopup(provider)
-      .then(()=>showToast('✅ تم تسجيل الدخول'))
-      .catch(e=>showToast('خطأ: '+e.code));
-  }
+  auth.signInWithPopup(provider)
+    .then(()=>showToast('✅ تم تسجيل الدخول'))
+    .catch(e=>{
+      if(e.code==='auth/popup-blocked'){
+        showToast('افتح التطبيق من Safari مباشرة للدخول أول مرة');
+      } else {
+        showToast('خطأ: '+e.code);
+      }
+    });
 }
 
 function signOut(){
