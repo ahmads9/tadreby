@@ -504,7 +504,7 @@ async function forceSyncNow(){
   hideUserMenu();
   showToast('⏳ جاري المزامنة...');
   await fsMigrateLocal();
-  await fsSyncToLocal();
+   startRealtimeSync();
 }
 
 // Auth state listener
@@ -538,6 +538,29 @@ auth.getRedirectResult().then(result=>{
   if(e.code!=='auth/no-current-user')showToast('خطأ في الدخول');
 });
 
+let fsUnsub=null;
+function startRealtimeSync(){
+  if(!currentUser)return;
+  if(fsUnsub)fsUnsub();
+  fsUnsub=db.collection('users').doc(currentUser.uid)
+    .collection('workouts')
+    .onSnapshot(snap=>{
+      snap.docChanges().forEach(change=>{
+        const k=fsKey(change.doc.id);
+        if(change.type==='removed'){
+          lsDel(k);
+        } else {
+          const d=change.doc.data().log;
+          if(d)lsSet(k,d);
+        }
+      });
+      renderHome();
+      const cur=document.getElementById('screen-history');
+      if(cur&&!cur.classList.contains('hidden'))renderHistory();
+      const prg=document.getElementById('screen-progress');
+      if(prg&&!prg.classList.contains('hidden'))renderProgress();
+    },e=>console.log('snapshot:',e));
+}
 // ── Render home ──
 function renderHome(){
   const logs=allLogsLocal();
